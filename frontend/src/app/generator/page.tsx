@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Sparkles, Upload, FileText, BookOpen, Target, Edit3,
@@ -9,6 +9,12 @@ import api from '@/lib/api'
 import toast from 'react-hot-toast'
 import { Toaster } from 'react-hot-toast'
 import type { GeneratedActivities } from '@/types'
+
+export default function GeneratorPage() {
+  return <Suspense fallback={<div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600" /></div>}><GeneratorContent /></Suspense>
+}
+
+function GeneratorContent() {
 
 const activityLabels = [
   { id: 'mcq', label: 'اختيار متعدد', icon: '📝' },

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { RefreshCw, ChevronRight, ChevronLeft, Rotate3D } from 'lucide-react'
 import api from '@/lib/api'
@@ -7,6 +7,10 @@ import { shuffle } from '@/lib/utils'
 import type { FlashCard } from '@/types'
 
 export default function FlashcardsGamePage() {
+  return <Suspense fallback={<div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600" /></div>}><FlashcardsContent /></Suspense>
+}
+
+function FlashcardsContent() {
   const searchParams = useSearchParams()
   const lessonId = searchParams.get('lesson_id')
 

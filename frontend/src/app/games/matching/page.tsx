@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { RefreshCw, Check, Shuffle } from 'lucide-react'
 import api from '@/lib/api'
@@ -8,6 +8,10 @@ import { playCorrect, playWrong, playVictory } from '@/lib/sounds'
 import type { MatchingPair } from '@/types'
 
 export default function MatchingGamePage() {
+  return <Suspense fallback={<div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600" /></div>}><MatchingContent /></Suspense>
+}
+
+function MatchingContent() {
   const searchParams = useSearchParams()
   const lessonId = searchParams.get('lesson_id')
 
