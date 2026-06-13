@@ -1,12 +1,53 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Any
 import json
 from database import get_db
-from models import Activity
+from models import Activity, Game
 from schemas.activity import ActivityResponse
+from schemas.game import GameResponse
+from pydantic import BaseModel
 
 router = APIRouter()
+
+GAME_TYPES = {"mcq", "matching", "ordering", "flashcards", "crossword", "word_search", "true_false", "fill_blank"}
+
+
+class ManualActivityCreate(BaseModel):
+    lesson_id: int
+    type: str
+    title: str
+    json_data: Any
+
+
+@router.post("/manual", response_model=ActivityResponse)
+def create_manual_activity(data: ManualActivityCreate, db: Session = Depends(get_db)):
+    activity = Activity(
+        lesson_id=data.lesson_id,
+        type=data.type,
+        title=data.title,
+        json_data=json.dumps(data.json_data, ensure_ascii=False)
+    )
+    db.add(activity)
+
+    if data.type in GAME_TYPES:
+        game = Game(
+            lesson_id=data.lesson_id,
+            game_type=data.type,
+            config=json.dumps(data.json_data, ensure_ascii=False)
+        )
+        db.add(game)
+
+    db.commit()
+    db.refresh(activity)
+    return ActivityResponse(
+        id=activity.id,
+        lesson_id=activity.lesson_id,
+        type=activity.type,
+        title=activity.title,
+        json_data=json.loads(activity.json_data),
+        created_at=activity.created_at
+    )
 
 
 @router.get("/lesson/{lesson_id}", response_model=List[ActivityResponse])
@@ -25,12 +66,16 @@ def list_activities(lesson_id: int, db: Session = Depends(get_db)):
     return result
 
 
+class UpdateActivityBody(BaseModel):
+    json_data: Any
+
+
 @router.put("/{activity_id}", response_model=ActivityResponse)
-def update_activity(activity_id: int, json_data: dict, db: Session = Depends(get_db)):
+def update_activity(activity_id: int, body: UpdateActivityBody, db: Session = Depends(get_db)):
     activity = db.query(Activity).filter(Activity.id == activity_id).first()
     if not activity:
         raise HTTPException(status_code=404, detail="النشاط غير موجود")
-    activity.json_data = json.dumps(json_data, ensure_ascii=False)
+    activity.json_data = json.dumps(body.json_data, ensure_ascii=False)
     db.commit()
     db.refresh(activity)
     return ActivityResponse(

@@ -2,11 +2,18 @@
 import { ReactNode, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Tajawal } from 'next/font/google'
 import {
   LayoutDashboard, BookOpen, Sparkles, Gamepad2, FileText,
   BarChart3, Download, GraduationCap, Menu, X, LogOut
 } from 'lucide-react'
 import './globals.css'
+
+const tajawal = Tajawal({
+  subsets: ['arabic'],
+  weight: ['400', '500', '700', '800', '900'],
+  variable: '--font-tajawal',
+})
 
 const navItems = [
   { href: '/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
@@ -24,14 +31,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
   if (pathname === '/') {
     return (
-      <html lang="ar" dir="rtl">
+      <html lang="ar" dir="rtl" className={tajawal.variable}>
         <body>{children}</body>
       </html>
     )
   }
 
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" className={tajawal.variable}>
       <body>
         <div className="min-h-screen bg-gray-50 flex">
           <aside className={`fixed lg:static inset-y-0 right-0 z-50 w-72 bg-white border-l border-gray-200 

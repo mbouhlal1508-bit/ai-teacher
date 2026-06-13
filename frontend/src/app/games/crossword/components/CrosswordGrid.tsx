@@ -14,9 +14,10 @@ interface Cell {
 interface Props {
   words: CrosswordItem[]
   onComplete: () => void
+  onCellCorrect?: () => void
 }
 
-export default function CrosswordGrid({ words, onComplete }: Props) {
+export default function CrosswordGrid({ words, onComplete, onCellCorrect }: Props) {
   const [cells, setCells] = useState<Map<string, Cell>>(new Map())
   const [gridSize, setGridSize] = useState({ rows: 0, cols: 0 })
   const [completed, setCompleted] = useState(false)
@@ -56,6 +57,7 @@ export default function CrosswordGrid({ words, onComplete }: Props) {
       if (cell) {
         cell.userChar = value
         newCells.set(key, cell)
+        if (value === cell.char) onCellCorrect?.()
       }
 
       const allFilled = Array.from(newCells.values()).every(c => c.userChar)

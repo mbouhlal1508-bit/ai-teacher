@@ -4,124 +4,91 @@ import { useSearchParams } from 'next/navigation'
 import { Timer, Trophy, Zap, RefreshCw, ArrowLeft, Check, X } from 'lucide-react'
 import api from '@/lib/api'
 import { shuffle } from '@/lib/utils'
-import type { MCQ } from '@/types'
 
 function playTick() {
   try {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.frequency.value = 800
-    gain.gain.value = 0.06
-    osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + 0.05)
+    const osc = ctx.createOscillator(); const gain = ctx.createGain()
+    osc.connect(gain); gain.connect(ctx.destination)
+    osc.frequency.value = 800; gain.gain.value = 0.06
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.05)
   } catch {}
 }
-
 function playCorrect() {
   try {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
     const notes = [523, 659, 784, 1047]
     notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.value = freq
-      osc.type = 'sine'
-      gain.gain.value = 0.12
-      osc.start(ctx.currentTime + i * 0.1)
-      osc.stop(ctx.currentTime + i * 0.1 + 0.15)
+      const osc = ctx.createOscillator(); const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.frequency.value = freq; osc.type = 'sine'; gain.gain.value = 0.12
+      osc.start(ctx.currentTime + i * 0.1); osc.stop(ctx.currentTime + i * 0.1 + 0.15)
       gain.gain.setValueAtTime(0.12, ctx.currentTime + i * 0.1)
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.15)
     })
   } catch {}
 }
-
 function playWrong() {
   try {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
     const notes = [400, 300]
     notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.value = freq
-      osc.type = 'sawtooth'
-      gain.gain.value = 0.1
-      osc.start(ctx.currentTime + i * 0.15)
-      osc.stop(ctx.currentTime + i * 0.15 + 0.2)
+      const osc = ctx.createOscillator(); const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.frequency.value = freq; osc.type = 'sawtooth'; gain.gain.value = 0.1
+      osc.start(ctx.currentTime + i * 0.15); osc.stop(ctx.currentTime + i * 0.15 + 0.2)
       gain.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.15)
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.2)
     })
   } catch {}
 }
-
 function playVictory() {
   try {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
     const melody = [523, 587, 659, 784, 659, 784, 1047]
     melody.forEach((freq, i) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.value = freq
-      osc.type = 'sine'
-      gain.gain.value = 0.1
+      const osc = ctx.createOscillator(); const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.frequency.value = freq; osc.type = 'sine'; gain.gain.value = 0.1
       const t = ctx.currentTime + i * 0.12
-      osc.start(t)
-      osc.stop(t + 0.18)
+      osc.start(t); osc.stop(t + 0.18)
       gain.gain.setValueAtTime(0.1, t)
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18)
     })
   } catch {}
 }
 
-export default function MCQGamePage() {
+interface TFItem { question: string; answer: boolean; explanation?: string }
+
+export default function TrueFalseGamePage() {
   const searchParams = useSearchParams()
   const lessonId = searchParams.get('lesson_id')
-  const [questions, setQuestions] = useState<MCQ[]>([])
+  const [questions, setQuestions] = useState<TFItem[]>([])
   const [currentQ, setCurrentQ] = useState(0)
   const [score, setScore] = useState(0)
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selected, setSelected] = useState<boolean | null>(null)
   const [showResult, setShowResult] = useState(false)
   const [timeLeft, setTimeLeft] = useState(30)
   const [gameOver, setGameOver] = useState(false)
   const [loading, setLoading] = useState(true)
   const [streak, setStreak] = useState(0)
 
-  const normalizeQuestions = (raw: any[]): MCQ[] =>
-    raw.map((q: any) => ({
-      question: q.question || '',
-      choices: Array.isArray(q.choices) ? q.choices : typeof q.choices === 'string' ? q.choices.split(/[,\n]/).map((c: string) => c.trim()).filter(Boolean) : [],
-      answer: q.answer || '',
-    }))
-
   useEffect(() => {
-    const fetchQuestions = async () => {
+    const fetchData = async () => {
       try {
         if (lessonId) {
           const { data } = await api.get(`/activities/lesson/${lessonId}`)
-          const mcq = data.find((a: any) => a.type === 'mcq')
-          if (mcq && Array.isArray(mcq.json_data)) {
-            setQuestions(shuffle(normalizeQuestions(mcq.json_data)))
+          const tf = data.find((a: any) => a.type === 'true_false')
+          if (tf && Array.isArray(tf.json_data)) {
+            setQuestions(shuffle(tf.json_data))
             return
           }
         }
-        const { data } = await api.get('/games/lesson/1')
-        const game = data.find((g: any) => g.game_type === 'mcq')
-        if (game && Array.isArray(game.config)) setQuestions(shuffle(normalizeQuestions(game.config)))
-      } catch (e) {
-        setQuestions(sampleQuestions)
-      } finally {
-        setLoading(false)
-      }
+        setQuestions(sampleTF)
+      } catch { setQuestions(sampleTF) }
+      finally { setLoading(false) }
     }
-    fetchQuestions()
+    fetchData()
   }, [lessonId])
 
   useEffect(() => {
@@ -133,11 +100,11 @@ export default function MCQGamePage() {
     return () => clearTimeout(timer)
   }, [timeLeft, showResult, gameOver])
 
-  const handleAnswer = (choice: string) => {
-    if (selected) return
-    setSelected(choice)
-    const isCorrect = choice === questions[currentQ].answer
-    if (isCorrect) {
+  const handleAnswer = (value: boolean) => {
+    if (selected !== null) return
+    setSelected(value)
+    const correct = value === questions[currentQ].answer
+    if (correct) {
       playCorrect()
       const bonus = Math.ceil(timeLeft / 3)
       setScore(s => s + 10 + bonus)
@@ -162,14 +129,8 @@ export default function MCQGamePage() {
   }
 
   const reset = () => {
-    setCurrentQ(0)
-    setScore(0)
-    setSelected(null)
-    setShowResult(false)
-    setTimeLeft(30)
-    setGameOver(false)
-    setStreak(0)
-    setQuestions(shuffle(questions))
+    setCurrentQ(0); setScore(0); setSelected(null); setShowResult(false)
+    setTimeLeft(30); setGameOver(false); setStreak(0); setQuestions(shuffle(questions))
   }
 
   if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600" /></div>
@@ -236,34 +197,42 @@ export default function MCQGamePage() {
 
       <hr className="my-4 border-t-2 border-gray-300" />
 
-      <div className="text-center mb-6">
+      <div className="text-center mb-10">
         <span className="text-base text-gray-400 mb-2 block">سؤال {currentQ + 1} من {questions.length}</span>
         <h3 className="text-[60px] font-bold text-gray-900 leading-relaxed px-4">{q.question}</h3>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 max-w-4xl mx-auto">
-        {q.choices.map((choice, i) => {
+      <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto">
+        {[true, false].map((value) => {
+          const label = value ? 'صح' : 'خطأ'
           let bg = 'bg-white hover:bg-gray-50 border-gray-200'
-          let icon = null
           if (showResult) {
-            if (choice === q.answer) { bg = 'bg-emerald-100 border-emerald-400'; icon = <Check className="w-6 h-6 text-emerald-600" /> }
-            else if (choice === selected) { bg = 'bg-red-100 border-red-400'; icon = <X className="w-6 h-6 text-red-600" /> }
+            if (value === q.answer) { bg = 'bg-emerald-100 border-emerald-400' }
+            else if (value === selected) { bg = 'bg-red-100 border-red-400' }
             else { bg = 'bg-gray-50 border-gray-100 opacity-50' }
-          } else if (selected === choice) {
+          } else if (selected === value) {
             bg = 'bg-primary-100 border-primary-400'
           }
+          const icon = showResult && value === q.answer ? <Check className="w-8 h-8 text-emerald-600" /> :
+                       showResult && value === selected && value !== q.answer ? <X className="w-8 h-8 text-red-600" /> : null
           return (
-            <button key={i} onClick={() => handleAnswer(choice)}
+            <button key={String(value)} onClick={() => handleAnswer(value)}
               disabled={showResult}
-              className={`w-full py-5 px-8 rounded-2xl border-2 text-right text-[50px] font-medium transition-all duration-200 ${bg} ${!showResult ? 'hover:shadow-lg hover:-translate-y-1' : ''}`}>
-              <div className="flex items-center justify-between gap-4">
-                <span className="flex-1">{choice}</span>
+              className={`w-full py-8 px-8 rounded-2xl border-4 text-center text-[50px] font-bold transition-all duration-200 ${bg} ${!showResult ? 'hover:shadow-lg hover:-translate-y-1' : ''}`}>
+              <div className="flex items-center justify-center gap-4">
+                <span>{label}</span>
                 {icon}
               </div>
             </button>
           )
         })}
       </div>
+
+      {showResult && q.explanation && (
+        <div className="mt-6 text-center text-lg text-gray-600 bg-blue-50 border border-blue-200 rounded-2xl p-4 max-w-2xl mx-auto">
+          💡 {q.explanation}
+        </div>
+      )}
 
       {showResult && (
         <div className="text-center mt-10">
@@ -276,10 +245,10 @@ export default function MCQGamePage() {
   )
 }
 
-const sampleQuestions: MCQ[] = [
-  { question: 'ما أول ركن من أركان الصلاة؟', choices: ['النية', 'الركوع', 'السجود', 'التشهد'], answer: 'النية' },
-  { question: 'كم عدد أركان الصلاة؟', choices: ['أربعة عشر', 'ثلاثة عشر', 'اثنا عشر', 'أحد عشر'], answer: 'أربعة عشر' },
-  { question: 'أركان الصلاة (أفعال) تنقسم إلى:', choices: ['أقوال وأفعال', 'أقوال فقط', 'أفعال فقط', 'لا شيء مما ذكر'], answer: 'أقوال وأفعال' },
-  { question: 'من أركان الصلاة القولية:', choices: ['تكبيرة الإحرام', 'الركوع', 'السجود', 'القيام'], answer: 'تكبيرة الإحرام' },
-  { question: 'الطمأنينة في الصلاة تعني:', choices: ['السكون والاستقرار', 'السرعة', 'الحركة', 'الكلام'], answer: 'السكون والاستقرار' },
+const sampleTF: TFItem[] = [
+  { question: 'الإيمان يزيد بالطاعة وينقص بالمعصية', answer: true, explanation: 'الإيمان يزيد بالطاعات وينقص بالمعاصي' },
+  { question: 'أركان الصلاة أربعة عشر ركناً', answer: true, explanation: 'أركان الصلاة أربعة عشر ركناً عند الجمهور' },
+  { question: 'النية من أركان الصلاة القولية', answer: false, explanation: 'النية من أركان الصلاة القلبية وليست قولية' },
+  { question: 'الطمأنينة تعني السرعة في الصلاة', answer: false, explanation: 'الطمأنينة تعني السكون والاستقرار' },
+  { question: 'تكبيرة الإحرام ركن من أركان الصلاة', answer: true, explanation: 'تكبيرة الإحرام ركن من أركان الصلاة عند جميع العلماء' },
 ]

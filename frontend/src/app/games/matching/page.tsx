@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { RefreshCw, Check, Shuffle } from 'lucide-react'
 import api from '@/lib/api'
 import { shuffle } from '@/lib/utils'
+import { playCorrect, playWrong, playVictory } from '@/lib/sounds'
 import type { MatchingPair } from '@/types'
 
 export default function MatchingGamePage() {
@@ -26,8 +27,9 @@ export default function MatchingGamePage() {
           const { data } = await api.get(`/activities/lesson/${lessonId}`)
           const match = data.find((a: any) => a.type === 'matching')
           if (match) {
-            setPairs(match.json_data)
-            initGame(match.json_data)
+            const raw = typeof match.json_data === 'string' ? JSON.parse(match.json_data) : match.json_data
+            setPairs(raw)
+            initGame(raw)
             return
           }
         }
@@ -59,8 +61,10 @@ export default function MatchingGamePage() {
     if (selectedLeft === id) {
       setMatched(m => [...m, id])
       setSelectedLeft(null)
-      if (matched.length + 1 === pairs.length) setCompleted(true)
+      playCorrect()
+      if (matched.length + 1 === pairs.length) { setTimeout(playVictory, 300); setCompleted(true) }
     } else {
+      playWrong()
       setWrongAttempt(true)
       setTimeout(() => {
         setSelectedLeft(null)
@@ -97,27 +101,19 @@ export default function MatchingGamePage() {
           {leftItems.map((item) => (
             <button key={item.id} onClick={() => handleLeftClick(item.id)}
               disabled={matched.includes(item.id) || completed}
-              className={`w-48 lg:w-64 p-4 rounded-2xl text-right font-medium text-gray-900 transition-all
-                ${matched.includes(item.id) ? 'bg-emerald-100 border-2 border-emerald-400 opacity-60 line-through' :
-                  selectedLeft === item.id ? 'bg-primary-100 border-2 border-primary-500 shadow-md scale-105' :
-                  wrongAttempt && selectedLeft === item.id ? 'bg-red-100 border-2 border-red-400' :
-                  'bg-white border-2 border-gray-200 hover:border-primary-300 hover:shadow-md'}`}>
+              className={`w-72 lg:w-96 p-6 rounded-2xl text-right font-medium transition-all text-[50px] ${matched.includes(item.id) ? 'bg-emerald-100 border-2 border-emerald-400 opacity-60 line-through text-emerald-700' : selectedLeft === item.id ? 'bg-primary-100 border-2 border-primary-500 shadow-md scale-105 text-primary-700' : wrongAttempt && selectedLeft === item.id ? 'bg-red-100 border-2 border-red-400 text-red-700' : 'bg-white border-2 border-gray-200 hover:border-primary-300 hover:shadow-md text-gray-900'}`}>
               {item.text}
             </button>
           ))}
         </div>
 
-        <div className="flex items-center text-2xl text-gray-300">⟷</div>
+        <div className="flex items-center text-4xl text-gray-300">⟷</div>
 
         <div className="space-y-3">
           {rightItems.map((item) => (
             <button key={item.id} onClick={() => handleRightClick(item.id)}
               disabled={matched.includes(item.id) || completed}
-              className={`w-48 lg:w-64 p-4 rounded-2xl text-right font-medium text-gray-900 transition-all
-                ${matched.includes(item.id) ? 'bg-emerald-100 border-2 border-emerald-400 opacity-60' :
-                  selectedLeft !== null && !matched.includes(item.id) ?
-                  'bg-amber-50 border-2 border-amber-300 hover:bg-amber-100 hover:shadow-md cursor-pointer' :
-                  'bg-white border-2 border-gray-200'}`}>
+              className={`w-72 lg:w-96 p-6 rounded-2xl text-right font-medium transition-all text-[50px] ${matched.includes(item.id) ? 'bg-emerald-100 border-2 border-emerald-400 opacity-60 text-emerald-700' : selectedLeft !== null && !matched.includes(item.id) ? 'bg-amber-50 border-2 border-amber-300 hover:bg-amber-100 hover:shadow-md cursor-pointer text-amber-800' : 'bg-white border-2 border-gray-200 text-gray-900'}`}>
               {item.text}
             </button>
           ))}

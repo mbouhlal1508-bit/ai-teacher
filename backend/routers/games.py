@@ -1,12 +1,38 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Any
 import json
 from database import get_db
 from models import Game
 from schemas.game import GameResponse
+from pydantic import BaseModel
 
 router = APIRouter()
+
+
+class ManualGameCreate(BaseModel):
+    lesson_id: int
+    game_type: str
+    config: Any
+
+
+@router.post("/manual", response_model=GameResponse)
+def create_manual_game(data: ManualGameCreate, db: Session = Depends(get_db)):
+    game = Game(
+        lesson_id=data.lesson_id,
+        game_type=data.game_type,
+        config=json.dumps(data.config, ensure_ascii=False)
+    )
+    db.add(game)
+    db.commit()
+    db.refresh(game)
+    return GameResponse(
+        id=game.id,
+        lesson_id=game.lesson_id,
+        game_type=game.game_type,
+        config=json.loads(game.config),
+        created_at=game.created_at
+    )
 
 
 @router.get("/lesson/{lesson_id}", response_model=List[GameResponse])
@@ -36,6 +62,16 @@ def get_game(game_id: int, db: Session = Depends(get_db)):
         config=json.loads(game.config),
         created_at=game.created_at
     )
+
+
+@router.delete("/{game_id}")
+def delete_game(game_id: int, db: Session = Depends(get_db)):
+    game = db.query(Game).filter(Game.id == game_id).first()
+    if not game:
+        raise HTTPException(status_code=404, detail="اللعبة غير موجودة")
+    db.delete(game)
+    db.commit()
+    return {"message": "تم حذف اللعبة بنجاح"}
 
 
 @router.put("/{game_id}", response_model=GameResponse)

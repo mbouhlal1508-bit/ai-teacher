@@ -36,6 +36,7 @@ export default function FlashcardsGamePage() {
 
   const next = () => {
     if (current < cards.length - 1) { setCurrent(c => c + 1); setFlipped(false) }
+    if (current + 1 === cards.length) playVictory()
   }
   const prev = () => {
     if (current > 0) { setCurrent(c => c - 1); setFlipped(false) }
@@ -55,20 +56,20 @@ export default function FlashcardsGamePage() {
       <h1 className="game-title">البطاقات التعليمية</h1>
       <p className="text-center text-gray-500 mb-8">انقر على البطاقة للتقليب</p>
 
-      <div className="max-w-md mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="text-center text-sm text-gray-400 mb-4">
           بطاقة {current + 1} من {cards.length}
         </div>
 
         <div className="perspective-1000 cursor-pointer" onClick={() => setFlipped(!flipped)}>
-          <div className={`relative w-full h-72 transition-transform duration-500 transform-style-3d ${flipped ? 'rotate-y-180' : ''}`}>
+          <div className={`relative w-full h-96 transition-transform duration-500 transform-style-3d ${flipped ? 'rotate-y-180' : ''}`}>
             <div className="absolute inset-0 bg-gradient-to-br from-primary-500 to-primary-700 rounded-3xl p-8 flex flex-col items-center justify-center backface-hidden shadow-xl">
               <Rotate3D className="w-6 h-6 text-primary-200 mb-4" />
-              <p className="text-white text-2xl font-bold text-center leading-relaxed">{card.front}</p>
+              <p className="text-white text-[60px] font-bold text-center leading-relaxed">{card.front}</p>
             </div>
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-3xl p-8 flex flex-col items-center justify-center backface-hidden rotate-y-180 shadow-xl">
               <p className="text-white text-sm opacity-80 mb-3">الجواب</p>
-              <p className="text-white text-2xl font-bold text-center leading-relaxed">{card.back}</p>
+              <p className="text-white text-[60px] font-bold text-center leading-relaxed">{card.back}</p>
             </div>
           </div>
         </div>

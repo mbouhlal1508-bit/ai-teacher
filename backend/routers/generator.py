@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 import json
 import os
 import tempfile
+import traceback
 from database import get_db
 from models import Lesson, Activity, Game
 from services.ai_generator import generate_activities, extract_from_pdf_text
@@ -20,12 +21,15 @@ def generate(
     if not lesson:
         raise HTTPException(status_code=404, detail="الدرس غير موجود")
 
-    result = generate_activities(
-        title=lesson.title,
-        grade=lesson.grade,
-        objectives=lesson.objectives or "",
-        content=lesson.content or ""
-    )
+    try:
+        result = generate_activities(
+            title=lesson.title,
+            grade=lesson.grade,
+            objectives=lesson.objectives or "",
+            content=lesson.content or ""
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"فشل التوليد: {str(e)}")
 
     activity_types = {
         "mcq": "اختيار متعدد",
@@ -92,12 +96,17 @@ def generate_from_text(
     db.commit()
     db.refresh(lesson)
 
-    result = generate_activities(
-        title=title,
-        grade=grade,
-        objectives=objectives,
-        content=content
-    )
+    try:
+        result = generate_activities(
+            title=title,
+            grade=grade,
+            objectives=objectives,
+            content=content
+        )
+    except Exception as e:
+        db.delete(lesson)
+        db.commit()
+        raise HTTPException(status_code=500, detail=f"فشل التوليد: {str(e)}")
 
     activity_types = {
         "mcq": "اختيار متعدد",
@@ -165,6 +174,9 @@ async def import_file(
 
     try:
         extracted_text = extract_text_from_file(tmp_path)
+        if not extracted_text.strip():
+            raise HTTPException(status_code=400, detail="لم يتم استخراج نص من الملف. تأكد أن الملف يحتوي على نص قابل للقراءة.")
+
         meta = extract_from_pdf_text(extracted_text)
         lesson_title = title or meta.get("lesson_title", file.filename or "درس مستورد")
         lesson_grade = grade or meta.get("grade", "غير محدد")
@@ -222,5 +234,9 @@ async def import_file(
             "extracted_meta": meta,
             "data": result
         }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"فشل التوليد: {str(e)}")
     finally:
         os.unlink(tmp_path)

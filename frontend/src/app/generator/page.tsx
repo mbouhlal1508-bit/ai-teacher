@@ -39,9 +39,27 @@ export default function GeneratorPage() {
   const [result, setResult] = useState<GeneratedActivities | null>(null)
   const [activeTab, setActiveTab] = useState('mcq')
   const [editMode, setEditMode] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) setFile(e.target.files[0])
+  }
+
+  const handleSaveOnly = async () => {
+    if (!title) {
+      toast.error('الرجاء إدخال عنوان الدرس')
+      return
+    }
+    setSaving(true)
+    try {
+      await api.post('/lessons', { title, grade, objectives, content })
+      toast.success('تم حفظ الدرس بنجاح')
+      router.push('/lessons')
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'فشل حفظ الدرس')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleGenerate = async () => {
@@ -84,7 +102,21 @@ export default function GeneratorPage() {
       }
       setEditMode(false)
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || 'فشل التوليد')
+      let msg = 'فشل التوليد'
+      if (err.response?.data?.detail) {
+        const detail = err.response.data.detail
+        msg = Array.isArray(detail)
+          ? detail.map((d: any) => d.msg).join('، ')
+          : typeof detail === 'string'
+            ? detail
+            : JSON.stringify(detail)
+      } else if (err.message?.includes('timeout') || err.code === 'ECONNABORTED') {
+        msg = 'انتهت مهلة الطلب، حاول مرة أخرى'
+      } else if (err.response?.status === 500) {
+        msg = 'خطأ في الخادم، تحقق من سجل الأخطاء'
+      }
+      toast.error(msg)
+      console.error('API Error:', err)
     } finally {
       setGenerating(false)
     }
@@ -172,9 +204,13 @@ export default function GeneratorPage() {
             </div>
           )}
 
-          <div className="mt-6">
+          <div className="mt-6 flex gap-3">
+            <button onClick={handleSaveOnly} disabled={saving}
+              className="btn-secondary flex-1 flex items-center justify-center gap-2 text-lg py-4">
+              <BookOpen className="w-6 h-6" /> حفظ الدرس فقط
+            </button>
             <button onClick={handleGenerate} disabled={generating}
-              className="btn-primary w-full flex items-center justify-center gap-3 text-lg py-4">
+              className="btn-primary flex-1 flex items-center justify-center gap-3 text-lg py-4">
               {generating ? (
                 <><Loader2 className="w-6 h-6 animate-spin" /> جاري التوليد...</>
               ) : (
@@ -387,12 +423,17 @@ function ActivityViewer({ type, data, editMode }: { type: string; data: Generate
   const renderers: Record<string, () => JSX.Element> = {
     mcq: renderMCQ,
     true_false: renderMCQ,
-    fill_blank: () => <div className="space-y-4">{items.map((fb: any, i: number) => (
-      <div key={i} className="p-4 bg-gray-50 rounded-2xl">
-        <p className="text-gray-900">{fb.sentence.replace('...', <span className="text-primary-600 font-bold">___</span>)}</p>
-        <p className="text-sm text-emerald-600 mt-2">الإجابة: {fb.answer}</p>
-      </div>
-    ))}</div>,
+    fill_blank: () => <div className="space-y-4">{items.map((fb: any, i: number) => {
+      const parts = fb.sentence?.split('...') || [fb.sentence]
+      return (
+        <div key={i} className="p-4 bg-gray-50 rounded-2xl">
+          <p className="text-gray-900">
+            {parts[0]}<span className="text-primary-600 font-bold">___</span>{parts.slice(1).join('')}
+          </p>
+          <p className="text-sm text-emerald-600 mt-2">الإجابة: {fb.answer}</p>
+        </div>
+      )
+    })}</div>,
     flashcards: renderFlashcards,
     matching: renderMatching,
     ordering: renderOrdering,

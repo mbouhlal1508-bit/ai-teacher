@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { RefreshCw, Check } from 'lucide-react'
 import api from '@/lib/api'
+import { playCorrect, playVictory } from '@/lib/sounds'
 import type { CrosswordItem } from '@/types'
 import CrosswordGrid from './components/CrosswordGrid'
 
@@ -53,7 +54,7 @@ export default function CrosswordGamePage() {
 
       <div className="grid lg:grid-cols-2 gap-8 items-start">
         <div>
-          <CrosswordGrid words={words} onComplete={() => setCompleted(true)} />
+          <CrosswordGrid words={words} onComplete={() => { playVictory(); setCompleted(true) }} onCellCorrect={playCorrect} />
         </div>
         <div className="space-y-3">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">الأدلة</h3>
@@ -65,7 +66,7 @@ export default function CrosswordGamePage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">تلميح</p>
-                  <p className="font-medium text-gray-900">{item.clue}</p>
+                  <p className="font-medium text-gray-900 text-[50px]">{item.clue}</p>
                 </div>
               </div>
             </div>

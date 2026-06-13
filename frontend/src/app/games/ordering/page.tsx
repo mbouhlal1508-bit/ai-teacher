@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { RefreshCw, Check, ArrowUp, ArrowDown } from 'lucide-react'
 import api from '@/lib/api'
 import { shuffle } from '@/lib/utils'
+import { playCorrect, playWrong, playVictory } from '@/lib/sounds'
 
 export default function OrderingGamePage() {
   const searchParams = useSearchParams()
@@ -59,9 +60,12 @@ export default function OrderingGamePage() {
     setChecking(true)
     const correct = items.every((item, i) => item === correctOrder[i])
     if (correct) {
+      playCorrect()
+      setTimeout(playVictory, 300)
       setCompleted(true)
       setWrong(false)
     } else {
+      playWrong()
       setWrong(true)
       setTimeout(() => setWrong(false), 1500)
     }
@@ -102,7 +106,7 @@ export default function OrderingGamePage() {
             <div className="w-10 h-10 bg-primary-100 text-primary-700 rounded-xl flex items-center justify-center font-bold">
               {i + 1}
             </div>
-            <div className="flex-1 font-medium text-gray-900">{item}</div>
+            <div className="flex-1 font-medium text-gray-900 text-[50px]">{item}</div>
             <div className="flex flex-col gap-1">
               <button onClick={() => moveUp(i)} disabled={i === 0}
                 className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-30 transition-colors">

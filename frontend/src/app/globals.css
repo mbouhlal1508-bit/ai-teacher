@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
-
 :root {
   --foreground: #0f172a;
   --background: #f8fafc;
@@ -16,7 +14,8 @@
 }
 
 body {
-  font-family: 'Cairo', system-ui, sans-serif;
+  font-family: var(--font-tajawal), system-ui, sans-serif;
+  font-size: 1.25rem;
   color: var(--foreground);
   background: var(--background);
   direction: rtl;
@@ -45,7 +44,7 @@ body {
   }
 
   .game-container {
-    @apply max-w-4xl mx-auto px-4 py-8;
+    @apply max-w-4xl mx-auto px-4 pb-8 pt-0;
   }
 
   .game-title {

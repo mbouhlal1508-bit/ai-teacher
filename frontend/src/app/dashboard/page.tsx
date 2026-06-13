@@ -50,7 +50,8 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((card) => {
           const Icon = card.icon
-          const value = data?.[card.key as keyof DashboardData] ?? 0
+          const raw = data?.[card.key as keyof DashboardData]
+          const value = typeof raw === 'number' ? raw : 0
           return (
             <Link key={card.key} href={card.href}>
               <div className="card hover:shadow-lg transition-all duration-200 group cursor-pointer">

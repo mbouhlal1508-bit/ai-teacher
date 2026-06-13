@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { RefreshCw, Check } from 'lucide-react'
 import api from '@/lib/api'
+import { playCorrect, playVictory } from '@/lib/sounds'
 import type { WordSearchItem } from '@/types'
 import WordSearchGrid from './components/WordSearchGrid'
 
@@ -31,7 +32,12 @@ export default function WordSearchGamePage() {
   }, [lessonId])
 
   const handleFound = (index: number) => {
-    setFound(prev => new Set(prev).add(index))
+    setFound(prev => {
+      const newSet = new Set(prev).add(index)
+      if (newSet.size === words.length) setTimeout(playVictory, 300)
+      else playCorrect()
+      return newSet
+    })
   }
 
   if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600" /></div>
@@ -67,7 +73,7 @@ export default function WordSearchGamePage() {
           {words.map((item, i) => (
             <div key={i}
               className={`p-3 rounded-2xl border-2 transition-all ${found.has(i) ? 'bg-emerald-50 border-emerald-300 opacity-60 line-through' : 'bg-white border-gray-200'}`}>
-              <p className={`font-medium ${found.has(i) ? 'text-emerald-700' : 'text-gray-900'}`}>
+              <p className={`font-medium text-[50px] ${found.has(i) ? 'text-emerald-700' : 'text-gray-900'}`}>
                 {found.has(i) && <Check className="w-4 h-4 inline ml-2 text-emerald-500" />}
                 {item.term || item.word}
               </p>

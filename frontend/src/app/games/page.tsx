@@ -1,17 +1,21 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Gamepad2, BookOpen } from 'lucide-react'
+import {
+  Gamepad2, BookOpen, HelpCircle, Link2, ArrowUpDown,
+  Layers, Grid3x3, Search, Sparkles
+} from 'lucide-react'
 import api from '@/lib/api'
 import type { Lesson } from '@/types'
 
 const gameTypes = [
-  { id: 'mcq', name: 'الاختيار المتعدد', desc: 'واجهة تفاعلية تشبه Kahoot مع مؤقت ونقاط', color: 'from-blue-500 to-blue-600', emoji: '🎯' },
-  { id: 'matching', name: 'المطابقة', desc: 'سحب وإفلات - وصل الزوج الصحيح', color: 'from-emerald-500 to-emerald-600', emoji: '🔗' },
-  { id: 'ordering', name: 'الترتيب', desc: 'رتب الخطوات بالترتيب الصحيح', color: 'from-purple-500 to-purple-600', emoji: '🔢' },
-  { id: 'flashcards', name: 'البطاقات التعليمية', desc: 'بطاقات تفاعلية تشبه Anki للتعلم', color: 'from-amber-500 to-amber-600', emoji: '🃏' },
-  { id: 'crossword', name: 'الكلمات المتقاطعة', desc: 'شبكة كلمات متقاطعة مع أدلة', color: 'from-rose-500 to-rose-600', emoji: '🔤' },
-  { id: 'wordsearch', name: 'بحث عن الكلمات', desc: 'ابحث عن الكلمات المخفية في الشبكة', color: 'from-cyan-500 to-cyan-600', emoji: '🔍' },
+  { id: 'mcq', name: 'الاختيار المتعدد', desc: 'واجهة تفاعلية تشبه Kahoot مع مؤقت ونقاط', color: 'from-blue-500 to-blue-600', icon: HelpCircle },
+  { id: 'true_false', name: 'صح وخطأ', desc: 'حدد ما إذا كانت العبارة صحيحة أم خاطئة', color: 'from-orange-500 to-orange-600', icon: HelpCircle },
+  { id: 'matching', name: 'المطابقة', desc: 'سحب وإفلات - وصل الزوج الصحيح', color: 'from-emerald-500 to-emerald-600', icon: Link2 },
+  { id: 'ordering', name: 'الترتيب', desc: 'رتب الخطوات بالترتيب الصحيح', color: 'from-purple-500 to-purple-600', icon: ArrowUpDown },
+  { id: 'flashcards', name: 'البطاقات التعليمية', desc: 'بطاقات تفاعلية تشبه Anki للتعلم', color: 'from-amber-500 to-amber-600', icon: Layers },
+  { id: 'crossword', name: 'الكلمات المتقاطعة', desc: 'شبكة كلمات متقاطعة مع أدلة', color: 'from-rose-500 to-rose-600', icon: Grid3x3 },
+  { id: 'wordsearch', name: 'بحث عن الكلمات', desc: 'ابحث عن الكلمات المخفية في الشبكة', color: 'from-cyan-500 to-cyan-600', icon: Search },
 ]
 
 export default function GamesPage() {
@@ -44,8 +48,8 @@ export default function GamesPage() {
         {gameTypes.map((game) => (
           <Link key={game.id} href={`/games/${game.id}${selectedLesson ? `?lesson_id=${selectedLesson}` : ''}`}>
             <div className="card hover:shadow-xl transition-all duration-300 group h-full">
-              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${game.color} flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform`}>
-                {game.emoji}
+              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${game.color} flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform shadow-lg`}>
+                <game.icon className="w-8 h-8 text-white" strokeWidth={1.5} />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">{game.name}</h3>
               <p className="text-gray-500 text-sm leading-relaxed">{game.desc}</p>
